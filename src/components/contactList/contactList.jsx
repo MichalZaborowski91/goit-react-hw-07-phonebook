@@ -1,13 +1,19 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { deleteContact } from 'redux/actions';
-import { selectContacts } from 'redux/selectors';
+import { selectContacts, selectError, selectIsLoading } from 'redux/selectors';
+import { deleteContact, fetchContacts } from 'redux/actions';
 import css from './contactList.module.css';
 
 export const ContactList = () => {
   const contacts = useSelector(selectContacts);
+  const isLoading = useSelector(selectIsLoading);
+  const error = useSelector(selectError);
   const dispatch = useDispatch();
   const [filter, setFilter] = useState('');
+
+  useEffect(() => {
+    dispatch(fetchContacts());
+  }, [dispatch]);
 
   const handleDelete = contactId => {
     dispatch(deleteContact(contactId));
@@ -45,19 +51,24 @@ export const ContactList = () => {
           </label>
         </form>
       </div>
-      <ol>
-        {viewContacts().map(contact => (
-          <li key={contact.id} className={css.listItem}>
-            {contact.name}: {contact.number}
-            <button
-              onClick={() => handleDelete(contact.id)}
-              className={css.deleteBtn}
-            >
-              Delete
-            </button>
-          </li>
-        ))}
-      </ol>
+      {isLoading && !error ? (
+        <p>Loading...</p>
+      ) : (
+        <ol>
+          {viewContacts().map(contact => (
+            <li key={contact.id} className={css.listItem}>
+              {contact.name}: {contact.phone}
+              <button
+                onClick={() => handleDelete(contact.id)}
+                className={css.deleteBtn}
+              >
+                Delete
+              </button>
+            </li>
+          ))}
+        </ol>
+      )}
+      {error && <p>{error}</p>}
     </div>
   );
 };

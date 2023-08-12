@@ -1,66 +1,38 @@
 import { createReducer } from '@reduxjs/toolkit';
-import { addContacts, deleteContact } from './actions';
-import Notiflix from 'notiflix';
+import { addContact, deleteContact, fetchContacts } from './actions';
+import { handlePending, handleRejected } from './selectors';
 
-const initialState = JSON.parse(localStorage.getItem('contacts'));
-
-export const contactsReducer = createReducer(initialState, {
-  [addContacts]: (state, action) => {
-    const newContact = action.payload;
-    const existedContact = state.some(
-      contact => contact.name.toLowerCase() === newContact.name.toLowerCase()
-    );
-    if (existedContact) {
-      Notiflix.Notify.warning(`Contact ${newContact.name} already exists.`);
-      return state;
-    } else {
-      const newStateAdd = [...state, newContact];
-      localStorage.setItem('contacts', JSON.stringify(newStateAdd));
-      return newStateAdd;
-    }
-  },
-  [deleteContact]: (state, action) => {
-    const newStateDelete = state.filter(
-      contact => contact.id !== action.payload
-    );
-    localStorage.setItem('contacts', JSON.stringify(newStateDelete));
-    return newStateDelete;
-  },
-});
-
-/*REDUX
-import { combineReducers } from 'redux';
-import Notiflix from 'notiflix';
-
-const initialState = JSON.parse(localStorage.getItem('contacts'));
-
-const contactsReducer = (state = initialState, action) => {
-  switch (action.type) {
-    case 'contacts/ADD':
-      const newContact = action.payload;
-      const existedContact = state.some(
-        contact => contact.name.toLowerCase() === newContact.name.toLowerCase()
-      );
-      if (existedContact) {
-        Notiflix.Notify.warning(`Contact ${newContact.name} already exists.`);
-        return state;
-      } else {
-        const newStateAdd = [...state, newContact];
-        localStorage.setItem('contacts', JSON.stringify(newStateAdd));
-        return newStateAdd;
-      }
-    case 'contacts/DELETE':
-      const newStateDelete = state.filter(
-        contact => contact.id !== action.payload
-      );
-      localStorage.setItem('contacts', JSON.stringify(newStateDelete));
-      return newStateDelete;
-    default:
-      return state;
-  }
+const initialState = {
+  items: [],
+  isLoading: false,
+  error: null,
 };
 
-export const rootReducer = combineReducers({
-  contacts: contactsReducer,
+export const contactsReducer = createReducer(initialState, {
+  [fetchContacts.pending]: handlePending,
+  [fetchContacts.fulfilled]: (state, action) => {
+    state.isLoading = false;
+    state.error = null;
+    state.items = action.payload;
+  },
+  [fetchContacts.rejected]: handleRejected,
+
+  [addContact.pending]: handlePending,
+  [addContact.fulfilled]: (state, action) => {
+    state.isLoading = false;
+    state.error = null;
+    state.items.push(action.payload);
+  },
+  [addContact.rejected]: handleRejected,
+
+  [deleteContact.pending]: handlePending,
+  [deleteContact.fulfilled]: (state, action) => {
+    state.isLoading = false;
+    state.error = null;
+    const index = state.items.findIndex(
+      contact => contact.id === action.payload.id
+    );
+    state.items.splice(index, 1);
+  },
+  [deleteContact.rejected]: handleRejected,
 });
-*/

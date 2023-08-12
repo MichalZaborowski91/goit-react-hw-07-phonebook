@@ -1,34 +1,40 @@
-import { createAction, nanoid } from '@reduxjs/toolkit';
+import { createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
 
-export const addContacts = createAction('contacts/ADD', (name, number) => {
-  return {
-    payload: {
-      id: nanoid(),
-      name,
-      number,
-    },
-  };
-});
+axios.defaults.baseURL = 'https://64d7cb405f9bf5b879cdfafb.mockapi.io/contacts';
 
-export const deleteContact = createAction('contacts/DELETE');
+export const fetchContacts = createAsyncThunk(
+  'contacts/FETCH_ALL',
+  async (_, thunkAPI) => {
+    try {
+      const response = await axios.get('/contacts');
+      return response.data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.message);
+    }
+  }
+);
 
-/*REDUX
-import { nanoid } from 'nanoid';
+export const addContact = createAsyncThunk(
+  'contacts/ADD_CONTACT',
+  async ({ name, phone }, thunkAPI) => {
+    try {
+      const response = await axios.post('/contacts', { name, phone });
+      return response.data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.message);
+    }
+  }
+);
 
-export const addContact = (name, number) => {
-  return {
-    type: 'contacts/ADD',
-    payload: {
-      id: nanoid(),
-      name,
-      number,
-    },
-  };
-};
-
-export const deleteContact = id => {
-  return {
-    type: 'contacts/DELETE',
-    payload: id,
-  };
-};*/
+export const deleteContact = createAsyncThunk(
+  'contacts/DELETE_CONTACT',
+  async (id, thunkAPI) => {
+    try {
+      const response = await axios.delete(`/contacts/${id}`);
+      return response.data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.message);
+    }
+  }
+);
