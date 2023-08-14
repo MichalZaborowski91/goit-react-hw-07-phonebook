@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { addContact } from 'redux/actions';
-import css from './contactForm.module.css';
+import { selectContacts } from 'redux/selectors';
+import Notiflix from 'notiflix';
 import PropTypes from 'prop-types';
+import css from './contactForm.module.css';
 
 export const ContactForm = () => {
   const dispatch = useDispatch();
+  const stateContacts = useSelector(selectContacts);
   const [contacts, setContacts] = useState({
     name: '',
     phone: '',
@@ -14,8 +17,18 @@ export const ContactForm = () => {
   const hanldeSubmit = e => {
     e.preventDefault();
     const form = e.target;
-    dispatch(addContact({ name: contacts.name, phone: contacts.phone }));
-    form.reset();
+    const newContact = contacts.name;
+    const existedContact = stateContacts.some(
+      contact => contact.name.toLowerCase() === newContact.toLowerCase()
+    );
+    if (existedContact) {
+      Notiflix.Notify.warning(`Contact ${newContact} already exists.`);
+      form.reset();
+      return;
+    } else {
+      dispatch(addContact({ name: contacts.name, phone: contacts.phone }));
+      form.reset();
+    }
   };
 
   const handleChange = e => {
